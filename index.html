@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>POST Mate</title>
+        <link href="http://mconf.github.io/api-mate/vendor/bootstrap.min.css" media="all" rel="stylesheet" type="text/css">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    </head>
+
+    <body>
+        <form method="post" action="/action" target="_blank">
+            <div class="modal-body row">
+                
+                <div class="col-md-6">
+                    <div id="menu-panel-1" class="form-horizontal">
+                    
+                        <div class="form-group">
+                            <label for="input-server" class="control-label col-sm-2">Server</label>
+                            <div class="col-sm-9">
+                                <input id="input-server" type="text" name="server" class="form-control input-sm" value="http://0.0.0.0:8080/bigbluebutton/api/">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-sharedsecret" class="control-label col-sm-2">SharedSecret</label>
+                            <div class="col-sm-9">
+                                <input id="input-sharedsecret" type="text" name="sharedsecret" class="form-control input-sm" value="8cd8ef52e8e101574e400365b55e11a6">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-checksum" class="control-label col-sm-2">Checksum</label>
+                            <div class="col-sm-9">
+                                <input id="input-checksum" type="text" class="form-control input-sm" value="">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sel1" class="control-label col-sm-2">Select API Call:</label>
+                            <div class="col-sm-9">
+                            <select class="form-control" id="sel1" name="call">
+                                <option value="root">/</option>
+                                <option value="create">Create</option>
+                                <option value="end">End</option>
+                                <option value="getMeetings">getMeetings</option>
+                                <option value="isMeetingRunning">isMeetingRunning</option>
+                                <option value="getMeetingInfo">getMeetingInfo</option>
+                                <option value="getRecordings">getRecordings</option>
+                                <option value="publishRecordings">publishRecordings</option>
+                                <option value="deleteRecordings">deleteRecordings</option>
+                                <option value="join">join</option>
+                            </select>
+                            </div>
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="input-q" class="control-label col-sm-2">Query</label>
+                            <div class="col-sm-9">
+                                <textarea id="input-query" name="query" rows="3" class="form-control input-sm"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-querysent" class="control-label col-sm-2">Checksum Input</label>
+                            <div class="col-sm-9">
+                                <input id="input-querysent" type="text" class="form-control input-sm" value="">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <div class="col-md-6">
+                    <!-- Your second column here -->
+                    <input type="submit" value="POST">
+                </div>
+            </div>
+        </form>
+        
+        <script src="sha1.js"></script>
+
+        <script>
+            function changeChecksum() {
+                var call = $("#sel1").val();
+                var sharedSecret = $("#input-sharedsecret").val();
+                var query = $("#input-query").val();
+                var checksumString = Sha1.hash(call + query + sharedSecret);
+                $("#input-checksum").val(checksumString);
+                $("#input-querysent").val(call + query + sharedSecret);
+            }
+
+            $(document).ready(function(){
+                $("#input-sharedsecret").keyup(function(event) {
+                   changeChecksum();
+                });
+                $("#input-query").keyup(function(event) {
+                   changeChecksum();
+                });
+                $("#sel1").change(function(event) {
+                   changeChecksum();
+                });
+            });
+        </script>
+    </body>
+</html>
