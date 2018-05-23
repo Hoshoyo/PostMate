@@ -84,7 +84,7 @@ func postCreate(apiCall string, server string, SharedSecret string, query string
 	checksum := GetChecksum(apiCall, query, SharedSecret)
 	serverURL := server + apiCall
 	if apiCall != "create" {
-		serverURL += "?" + query + "checksum=" + checksum
+		serverURL += "?" + query + "&checksum=" + checksum
 	}
 
 	u.Add("checksum", checksum)
