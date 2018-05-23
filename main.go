@@ -83,16 +83,21 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
 func postCreate(apiCall string, server string, SharedSecret string, query string, u url.Values) ([]byte, string) {
 	checksum := GetChecksum(apiCall, query, SharedSecret)
 	serverURL := server + apiCall
+	if apiCall != "create" {
+		serverURL += "?" + query + "checksum=" + checksum
+	}
+
 	u.Add("checksum", checksum)
 
 	fmt.Println("POST query: ", serverURL)
 
 	rs, err := http.PostForm(serverURL, u)
-	contentType := rs.Header.Get("Content-Type")
+	var contentType string
 
 	if err != nil {
 		fmt.Println(err)
 	} else {
+		contentType = rs.Header.Get("Content-Type")
 		r, _ := ioutil.ReadAll(rs.Body)
 		return r, contentType
 	}
