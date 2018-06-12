@@ -88,6 +88,9 @@
                 var call = $("#sel1").val();
                 var sharedSecret = $("#input-sharedsecret").val();
                 var query = $("#input-query").val();
+                if(call == "create") {
+                    query = ""
+                }
                 var checksumString = Sha1.hash(call + query + sharedSecret);
                 $("#input-checksum").val(checksumString);
                 $("#input-querysent").val(call + query + sharedSecret);

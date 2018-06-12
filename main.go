@@ -152,7 +152,12 @@ func main() {
 	http.HandleFunc("/", rootCall)
 	http.HandleFunc("/action", actionHandler)
 	http.HandleFunc("/sha1.js", sha1Js)
-	if err := http.ListenAndServe(":8090", nil); err != nil {
+
+	port := ":8090"
+
+	fmt.Println("Listening on port ", port, " ...");
+
+	if err := http.ListenAndServe(port, nil); err != nil {
 		panic(err)
 	}
 }
