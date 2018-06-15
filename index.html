@@ -162,6 +162,16 @@
             }
 
             $(document).ready(function(){
+                $("#input-server").keyup(function(event) {
+                    changeCurl();
+                });
+                $("#selcontent").keyup(function(event) {
+                    changeCurl();
+                });
+                $("#sel1").keyup(function(event) {
+                    changeCurl();
+                });
+
                 $("#input-sharedsecret").keyup(function(event) {
                    changeChecksum();
                    changeCurl();
