@@ -23,6 +23,13 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="input-q" class="control-label col-sm-2">URL Query</label>
+                            <div class="col-sm-9">
+                                <textarea id="input-url-query" name="urlquery" rows="3" class="form-control input-sm"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <label for="input-sharedsecret" class="control-label col-sm-2">SharedSecret</label>
                             <div class="col-sm-9">
                                 <input id="input-sharedsecret" type="text" name="sharedsecret" class="form-control input-sm" value="8cd8ef52e8e101574e400365b55e11a6">
@@ -46,11 +53,21 @@
                             </select>
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label for="selcontent" class="control-label col-sm-2">Select Content-Type:</label>
+                            <div class="col-sm-9">
+                            <select class="form-control" id="selcontent" name="contenttype">
+                                <option value="appurlenc">application/x-www-form-urlencoded</option>
+                                <option value="appxml">application/xml</option>
+                            </select>
+                            </div>
+                        </div>
                 
                         <div class="form-group">
-                            <label for="input-q" class="control-label col-sm-2">Query</label>
+                            <label for="input-q" class="control-label col-sm-2">Body</label>
                             <div class="col-sm-9">
-                                <textarea id="input-query" name="query" rows="3" class="form-control input-sm"></textarea>
+                                <textarea id="input-body" name="body" rows="3" class="form-control input-sm"></textarea>
                             </div>
                         </div>
 
@@ -66,6 +83,13 @@
                             <label for="input-querysent" class="control-label col-sm-2">Checksum Input</label>
                             <div class="col-sm-9">
                                 <input id="input-querysent" type="text" class="form-control input-sm" value="">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-curl" class="control-label col-sm-2">curl command</label>
+                            <div class="col-sm-9">
+                                <textarea id="input-curl" type="text" name="body" class="form-control input-sm"></textarea>
                             </div>
                         </div>
 
@@ -87,24 +111,73 @@
             function changeChecksum() {
                 var call = $("#sel1").val();
                 var sharedSecret = $("#input-sharedsecret").val();
-                var query = $("#input-query").val();
-                if(call == "create") {
-                    query = ""
-                }
+                var query = $("#input-url-query").val();
                 var checksumString = Sha1.hash(call + query + sharedSecret);
                 $("#input-checksum").val(checksumString);
                 $("#input-querysent").val(call + query + sharedSecret);
+            }
+            function changeCurl() {
+                var call = $("#sel1").val();
+                if(call == "root") {
+                    call = ""
+                }
+
+                var sharedSecret = $("#input-sharedsecret").val();
+                var query = $("#input-url-query").val();
+                var checksumString = Sha1.hash(call + query + sharedSecret);
+                var server = $("#input-server").val()
+
+                var fullQuery = server + call
+                if (query != "") {
+                    fullQuery += "?" + query
+                }
+                var body = $("#input-body").val()
+
+                var method = $("#selcontent").val()
+
+                if(method == "appurlenc") {
+                    if(body != "") {
+                        body += "&"
+                    }
+                    body += "checksum=" + checksumString
+                }
+
+                var curl = "curl -X POST -d \"" + body + "\" " + "\"" + fullQuery + "\""
+                $("#input-curl").val(curl)
+            }
+
+            function changeUpperQuery() {
+                var s = $("#input-server").val()
+                var res = s.match(/http:\/\/[a-zA-z\.\-0-9:]*\/bigbluebutton\/api\//);
+                
+                var call = $("#sel1").val()
+                var urlquery = $("#input-url-query").val()
+
+                res += call
+                if(urlquery != "") {
+                    res += "?" + urlquery
+                }
+
+                $("#input-server").val(res)
             }
 
             $(document).ready(function(){
                 $("#input-sharedsecret").keyup(function(event) {
                    changeChecksum();
+                   changeCurl();
                 });
-                $("#input-query").keyup(function(event) {
+                $("#input-body").keyup(function(event) {
                    changeChecksum();
+                   changeCurl();
                 });
                 $("#sel1").change(function(event) {
                    changeChecksum();
+                   changeCurl();
+                });
+
+                $("#input-url-query").keyup(function(event){
+                    changeChecksum();
+                    changeCurl();
                 });
             });
         </script>

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 
 	"github.com/howeyc/fsnotify"
@@ -48,6 +49,8 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
 	var sharedsecret string
 	var call string
 	var query url.Values
+	var body string
+	var method string
 
 	for k, v := range r.Form {
 		fmt.Println(k, " -> ", v)
@@ -61,47 +64,67 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
 			if call == "root" {
 				call = ""
 			}
-		case "query":
-			q := v[0]
-			query, _ = url.ParseQuery(q)
+		case "urlquery":
+			query, _ = url.ParseQuery(v[0])
+		case "body":
+			body = v[0]
+		case "contenttype":
+			method = v[0]
 		}
 	}
 
-	var encodedQuery string
-	if call == "create" {
-		encodedQuery = ""
-	} else {
-		encodedQuery = query.Encode()
-	}
-	response, contentType := postCreate(call, server, sharedsecret, encodedQuery, query)
+	encodedQuery := query.Encode()
+
+	response, contentType := postCreate(call, server, sharedsecret, encodedQuery, body, method)
 	w.Header().Set("Content-Type", contentType)
 	w.Write(response)
 }
 
 // The BBB uses the empty query to calculate the checksum, thus the checksum for post
 // requests will always be the same for a given call
-func postCreate(apiCall string, server string, SharedSecret string, query string, u url.Values) ([]byte, string) {
+func postCreate(apiCall string, server string, SharedSecret string, query string, body string, method string) ([]byte, string) {
 	checksum := GetChecksum(apiCall, query, SharedSecret)
 	serverURL := server + apiCall
-	if apiCall != "create" {
-		serverURL += "?" + query + "&checksum=" + checksum
+	if query != "" {
+		serverURL += "?" + query
 	}
 
-	u.Add("checksum", checksum)
+	if method == "appurlenc" {
+		u, _ := url.ParseQuery(body)
+		u.Add("checksum", checksum)
 
-	fmt.Println("POST query: ", serverURL)
+		fmt.Println("POST query: ", serverURL)
+		fmt.Println("POST body: ", u)
 
-	rs, err := http.PostForm(serverURL, u)
-	var contentType string
-
-	if err != nil {
-		fmt.Println(err)
+		rs, err := http.PostForm(serverURL, u)
+		var contentType string
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			contentType = rs.Header.Get("Content-Type")
+			r, _ := ioutil.ReadAll(rs.Body)
+			return r, contentType
+		}
+		return nil, contentType
+	} else if method == "appxml" {
+		req, err := http.NewRequest("POST", serverURL, strings.NewReader(body))
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			req.Header.Set("Content-Type", "application/xml")
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				fmt.Println(err)
+			}
+			contentType := resp.Header.Get("Content-Type")
+			r, _ := ioutil.ReadAll(resp.Body)
+			return r, contentType
+		}
 	} else {
-		contentType = rs.Header.Get("Content-Type")
-		r, _ := ioutil.ReadAll(rs.Body)
-		return r, contentType
+		fmt.Println("Unsupported format")
 	}
-	return nil, contentType
+	return nil, ""
 }
 
 func CreateWatcher() {
@@ -155,7 +178,7 @@ func main() {
 
 	port := ":8090"
 
-	fmt.Println("Listening on port ", port, " ...");
+	fmt.Println("Listening on port ", port, " ...")
 
 	if err := http.ListenAndServe(port, nil); err != nil {
 		panic(err)
