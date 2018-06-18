@@ -140,10 +140,18 @@
                         body += "&"
                     }
                     body += "checksum=" + checksumString
-                }
 
-                var curl = "curl -X POST -d '" + body + "' " + "\"" + fullQuery + "\""
-                $("#input-curl").val(curl)
+                    var curl = "curl -X POST -H \"Content-Type: application/x-www-form-urlencoded\" -d '" + body + "' " + "\"" + fullQuery + "\""
+                    $("#input-curl").val(curl)
+                } else {
+                    if(query == "") {
+                        fullQuery += "?checksum=" + checksumString
+                    } else {
+                        fullQuery += "&checksum=" + checksumString
+                    }
+                    var curl = "curl -X POST -H \"Content-Type: application/xml\" -d '" + body + "' " + "\"" + fullQuery + "\""
+                    $("#input-curl").val(curl)
+                }                
             }
 
             function changeUpperQuery() {
