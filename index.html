@@ -102,7 +102,7 @@
                     <input type="submit" value="POST">
                 </div>
             </div>
-            <div class="col-sm-2"></div><div class="text-muted col-sm-9">http://test-install.blindsidenetworks.com/bigbluebutton/api</div>
+            <div class="col-sm-2"></div><div class="text-muted col-sm-9">http://test-install.blindsidenetworks.com/bigbluebutton/api/</div>
         </form>
         
         <script src="sha1.js"></script>
@@ -142,7 +142,7 @@
                     body += "checksum=" + checksumString
                 }
 
-                var curl = "curl -X POST -d \"" + body + "\" " + "\"" + fullQuery + "\""
+                var curl = "curl -X POST -d '" + body + "' " + "\"" + fullQuery + "\""
                 $("#input-curl").val(curl)
             }
 

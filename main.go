@@ -107,6 +107,11 @@ func postCreate(apiCall string, server string, SharedSecret string, query string
 		}
 		return nil, contentType
 	} else if method == "appxml" {
+		if query == "" {
+			serverURL += "?checksum=" + checksum
+		} else {
+			serverURL += "&checksum=" + checksum
+		}
 		req, err := http.NewRequest("POST", serverURL, strings.NewReader(body))
 		if err != nil {
 			fmt.Println(err)
