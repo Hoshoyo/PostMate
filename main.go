@@ -7,8 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
+
+	"./testgen"
 
 	"github.com/howeyc/fsnotify"
 )
@@ -51,9 +54,9 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
 	var query url.Values
 	var body string
 	var method string
+	var testcomment string
 
 	for k, v := range r.Form {
-		fmt.Println(k, " -> ", v)
 		switch k {
 		case "server":
 			server = v[0]
@@ -70,19 +73,21 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
 			body = v[0]
 		case "contenttype":
 			method = v[0]
+		case "testcomment":
+			testcomment = v[0]
 		}
 	}
 
 	encodedQuery := query.Encode()
 
-	response, contentType := postCreate(call, server, sharedsecret, encodedQuery, body, method)
+	response, contentType := postCreate(call, server, sharedsecret, encodedQuery, body, method, testcomment)
 	w.Header().Set("Content-Type", contentType)
 	w.Write(response)
 }
 
 // The BBB uses the empty query to calculate the checksum, thus the checksum for post
 // requests will always be the same for a given call
-func postCreate(apiCall string, server string, SharedSecret string, query string, body string, method string) ([]byte, string) {
+func postCreate(apiCall string, server string, SharedSecret string, query string, body string, method string, testcomment string) ([]byte, string) {
 	checksum := GetChecksum(apiCall, query, SharedSecret)
 	serverURL := server + apiCall
 	if query != "" {
@@ -95,6 +100,7 @@ func postCreate(apiCall string, server string, SharedSecret string, query string
 
 		fmt.Println("POST query: ", serverURL)
 		fmt.Println("POST body: ", u)
+		testgen.GenerateTestURLEncoded(u, server, apiCall, query, testcomment)
 
 		rs, err := http.PostForm(serverURL, u)
 		var contentType string
@@ -112,6 +118,8 @@ func postCreate(apiCall string, server string, SharedSecret string, query string
 		} else {
 			serverURL += "&checksum=" + checksum
 		}
+
+		testgen.GenerateTestApplicationXML(body, server, apiCall, query, testcomment)
 		req, err := http.NewRequest("POST", serverURL, strings.NewReader(body))
 		if err != nil {
 			fmt.Println(err)
@@ -174,10 +182,35 @@ func sha1Js(w http.ResponseWriter, r *http.Request) {
 	w.Write(bytes)
 }
 
+var (
+	id       int
+	outMutex sync.Mutex
+)
+
+func genTest(w http.ResponseWriter, r *http.Request) {
+	outMutex.Lock()
+	fmt.Printf("Generating test use_cases%d.go ...\n", id)
+	file, err := os.OpenFile(fmt.Sprintf("use_cases%d.go", id), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+		outMutex.Unlock()
+		return
+	}
+	testgen.GenerateTestFileFooter()
+	file.Write([]byte(testgen.CurrentTestString()))
+	id++
+	outMutex.Unlock()
+
+	testgen.NewTest()
+	testgen.GenerateTestFileHeader(id)
+}
+
 func main() {
+	id = 4
 	htmlFile, _ = ioutil.ReadFile("./index.html")
 	go CreateWatcher()
 	http.HandleFunc("/", rootCall)
+	http.HandleFunc("/genTest", genTest)
 	http.HandleFunc("/action", actionHandler)
 	http.HandleFunc("/sha1.js", sha1Js)
 
@@ -185,6 +218,8 @@ func main() {
 
 	fmt.Println("Listening on port ", port, " ...")
 
+	testgen.NewTest()
+	testgen.GenerateTestFileHeader(id)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		panic(err)
 	}

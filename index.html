@@ -67,7 +67,7 @@
                         <div class="form-group">
                             <label for="input-q" class="control-label col-sm-2">Body</label>
                             <div class="col-sm-9">
-                                <textarea id="input-body" name="body" rows="3" class="form-control input-sm"></textarea>
+                                <textarea id="input-body" name="body" rows="8" class="form-control input-sm"></textarea>
                             </div>
                         </div>
 
@@ -89,9 +89,11 @@
                         <div class="form-group">
                             <label for="input-curl" class="control-label col-sm-2">curl command</label>
                             <div class="col-sm-9">
-                                <textarea id="input-curl" type="text" name="body" class="form-control input-sm"></textarea>
+                                <textarea id="input-curl" type="text" name="curl" rows="8" class="form-control input-sm"></textarea>
                             </div>
                         </div>
+
+                        
 
                     </div>
                 </div>
@@ -99,11 +101,25 @@
 
                 <div class="col-md-6">
                     <!-- Your second column here -->
-                    <input type="submit" value="POST">
+                    <div class="form-group">
+                        <input type="submit" value="POST">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="input-testcomment" class="control-label col-sm-2">Test Comment</label>
+                        <div class="col-sm-9">
+                            <textarea id="input-testcomment" type="text" name="testcomment" rows="3" class="form-control input-sm"></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-sm-2"></div><div class="text-muted col-sm-9">http://test-install.blindsidenetworks.com/bigbluebutton/api/</div>
         </form>
+        <div class="col-md-6">
+            <form method="post" action="/genTest" target="_blank">
+                <input type="submit" value="Generate Test File">
+            </form>
+        </div>
         
         <script src="sha1.js"></script>
 
