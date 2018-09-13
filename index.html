@@ -49,6 +49,8 @@
                                 <option value="getRecordings">getRecordings</option>
                                 <option value="publishRecordings">publishRecordings</option>
                                 <option value="deleteRecordings">deleteRecordings</option>
+                                <option value="getDefaultConfigXML">getDefaultConfigXML</option>
+                                <option value="setConfigXML">setConfigXML</option>
                                 <option value="join">join</option>
                             </select>
                             </div>
@@ -128,6 +130,11 @@
                 var call = $("#sel1").val();
                 var sharedSecret = $("#input-sharedsecret").val();
                 var query = $("#input-url-query").val();
+                
+                if(call == "setConfigXML") {
+                    query = $("#input-body").val();
+                }
+
                 var checksumString = Sha1.hash(call + query + sharedSecret);
                 $("#input-checksum").val(checksumString);
                 $("#input-querysent").val(call + query + sharedSecret);

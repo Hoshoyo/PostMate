@@ -29,11 +29,16 @@ func GetIndexFile() []byte {
 	return res
 }
 
-func GetChecksum(apiCall, query, sharedSecret string) string {
-	data := apiCall + query + sharedSecret
+func GetChecksum(apiCall, query, body, sharedSecret string) string {
+	var data string
+	if apiCall == "setConfigXML" {
+		data = apiCall + body + sharedSecret
+	} else {
+		data = apiCall + query + sharedSecret
+	}
 	checksum := sha1.Sum([]byte(data))
 
-	fmt.Println(apiCall, " + ", query, " + ", sharedSecret, " = ", hex.EncodeToString(checksum[:]))
+	fmt.Println("Checksum: ", hex.EncodeToString(checksum[:]))
 
 	return hex.EncodeToString(checksum[:])
 }
@@ -88,7 +93,7 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
 // The BBB uses the empty query to calculate the checksum, thus the checksum for post
 // requests will always be the same for a given call
 func postCreate(apiCall string, server string, SharedSecret string, query string, body string, method string, testcomment string) ([]byte, string) {
-	checksum := GetChecksum(apiCall, query, SharedSecret)
+	checksum := GetChecksum(apiCall, query, body, SharedSecret)
 	serverURL := server + apiCall
 	if query != "" {
 		serverURL += "?" + query
@@ -100,7 +105,7 @@ func postCreate(apiCall string, server string, SharedSecret string, query string
 
 		fmt.Println("POST query: ", serverURL)
 		fmt.Println("POST body: ", u)
-		testgen.GenerateTestURLEncoded(u, server, apiCall, query, testcomment)
+		testgen.GenerateTestURLEncoded(u, server, apiCall, query, SharedSecret, testcomment)
 
 		rs, err := http.PostForm(serverURL, u)
 		var contentType string
@@ -119,7 +124,7 @@ func postCreate(apiCall string, server string, SharedSecret string, query string
 			serverURL += "&checksum=" + checksum
 		}
 
-		testgen.GenerateTestApplicationXML(body, server, apiCall, query, testcomment)
+		testgen.GenerateTestApplicationXML(body, server, apiCall, query, SharedSecret, testcomment)
 		req, err := http.NewRequest("POST", serverURL, strings.NewReader(body))
 		if err != nil {
 			fmt.Println(err)
